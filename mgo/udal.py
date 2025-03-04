@@ -93,7 +93,7 @@ class UDAL(udal.UDAL):
         # if numeric, tuple input lower and upper bounds
         # many missing values, so some should be filtered as PRESENT/MISSING
 
-        # TODO: here I want to filter the data according to params
+        # TODO: extend filtering the data according to params
         data = self.__filter_observatories(data, params)
 
         metadata = {}
@@ -103,6 +103,9 @@ class UDAL(udal.UDAL):
         raise NotImplementedError
 
     def __filter_observatories(self, data: pd.DataFrame, params: dict) -> pd.DataFrame:
+        """This function filters the data according to the params dictionary.
+        Just an example of matching single values on the columns of the data.
+        """
         # iterate over the keys of the params dictionary
         for key in params:
             # if the key is not in the columns of the data, raise an exception
@@ -121,6 +124,10 @@ class UDAL(udal.UDAL):
         )
         data = pd.read_csv(path, index_col=[0])
 
+        # TODO: validate
+
+        # TODO: filter
+
         metadata = {}
         return data, metadata
 
@@ -128,6 +135,7 @@ class UDAL(udal.UDAL):
         raise NotImplementedError
 
     def __filter_logsheets(self, data: pd.DataFrame, params: dict) -> pd.DataFrame:
+        """This is just an example of matching single values on the comumns of the data."""
         # iterate over the keys of the params dictionary
         for key in params:
             # if the key is not in the columns of the data, raise an exception
@@ -138,6 +146,7 @@ class UDAL(udal.UDAL):
         return data
 
     def execute(self, name: str, params: dict | None = None) -> Result:
+        """Find and execute the query with the given name."""
         if name in self._queryCallables:
             data, metadata = self._queryCallables[name](params or {})
             return Result(QUERY_REGISTRY[name], data, metadata)
