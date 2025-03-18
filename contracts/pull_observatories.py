@@ -15,7 +15,7 @@ import os
 import pandas as pd
 import logging
 
-from utils_contracts import check_diffs, rewrite_file, reconfig_logger
+from contracts.utils_contracts import check_diffs, rewrite_file, reconfig_logger
 
 # set root path to the parent directory
 ROOT = os.path.dirname(os.path.dirname(__file__))
