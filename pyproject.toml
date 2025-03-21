@@ -19,6 +19,7 @@ packages = [
 
 [tool.poetry.dependencies]
 py-udal-interface = {git = "https://github.com/fair-ease/py-udal-interface.git"}
+natsort = "^8.4.0"
 pandas = "^2.2.3"
 
 [tool.poetry.group.example.dependencies]
