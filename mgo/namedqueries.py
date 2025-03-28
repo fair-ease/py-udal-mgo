@@ -6,8 +6,17 @@ import udal.specification as udal
 
 
 QueryName = Literal[
-    "urn:embrc.eu:emobon:observatories",
+    "urn:embrc.eu:emobon:all_by_ref_code",  # this should use ref codes from logsheets and query all the tables at once
+    "urn:embrc.eu:emobon:go",               # columns 'ref_code', 'id', 'name', 'aspect', 'abundance'
+    "urn:embrc.eu:emobon:go_slim",          # columns 'ref_code', 'id', 'name', 'aspect', 'abundance'
+    "urn:embrc.eu:emobon:ips",
+    "urn:embrc.eu:emobon:ko",
     "urn:embrc.eu:emobon:logsheets",
+    "urn:embrc.eu:emobon:lsu",
+    "urn:embrc.eu:emobon:observatories",
+    "urn:embrc.eu:emobon:pfam",
+    "urn:embrc.eu:emobon:ssu",              # SSU tables
+
 ]
 """Type to help development restricting query names to existing ones."""
 
@@ -16,18 +25,8 @@ QUERY_NAMES: typing.Tuple[QueryName, ...] = typing.get_args(QueryName)
 """List of the supported query names."""
 
 
+# Ordered alphabetically
 QUERY_REGISTRY: dict[QueryName, NamedQueryInfo] = {
-    "urn:embrc.eu:emobon:observatories": NamedQueryInfo(
-        "urn:embrc.eu:emobon:observatories",
-        {
-            'observatory_id': ['str', udal.tlist('str')],
-            'country': ['str', udal.tlist('str')],
-            'env_package': [udal.tliteral('soft_sediment'),
-                            udal.tliteral('hard_sediment'),
-                            udal.tliteral('water_column')],
-            'loc_regional_mgrid': ['int', udal.tlist('int')],
-        },
-    ),
     "urn:embrc.eu:emobon:logsheets": NamedQueryInfo(
         "urn:embrc.eu:emobon:logsheets",
         {
@@ -110,6 +109,17 @@ QUERY_REGISTRY: dict[QueryName, NamedQueryInfo] = {
             'env_package': [udal.tliteral('soft_sediment'),
                             udal.tliteral('hard_sediment'),
                             udal.tliteral('water_column')],
+        },
+    ),
+    "urn:embrc.eu:emobon:observatories": NamedQueryInfo(
+        "urn:embrc.eu:emobon:observatories",
+        {
+            'observatory_id': ['str', udal.tlist('str')],
+            'country': ['str', udal.tlist('str')],
+            'env_package': [udal.tliteral('soft_sediment'),
+                            udal.tliteral('hard_sediment'),
+                            udal.tliteral('water_column')],
+            'loc_regional_mgrid': ['int', udal.tlist('int')],
         },
     ),
 }

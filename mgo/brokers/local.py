@@ -9,8 +9,18 @@ from ..result import Result
 
 
 localBrokerQueryNames: List[QueryName] = [
-    "urn:embrc.eu:emobon:observatories",
+    "urn:embrc.eu:emobon:all_by_ref_code",  # this should use ref codes from logsheets and query all the tables at once
+    "urn:embrc.eu:emobon:go",               # columns 'ref_code', 'id', 'name', 'aspect', 'abundance'
+    "urn:embrc.eu:emobon:go_slim",          # columns 'ref_code', 'id', 'name', 'aspect', 'abundance'
+    "urn:embrc.eu:emobon:ips",              # 'ref_code', 'accession', 'description', 'abundance'
+    "urn:embrc.eu:emobon:ko",               # 'ref_code', 'entry', 'name', 'abundance'
     "urn:embrc.eu:emobon:logsheets",
+    # LSU: 'ref_code', 'ncbi_tax_id', 'abundance', 'superkingdom', 'kingdom','phylum', 'class', 'order', 'family', 'genus', 'species'
+    "urn:embrc.eu:emobon:lsu",              
+    "urn:embrc.eu:emobon:observatories",
+    "urn:embrc.eu:emobon:pfam",             # 'ref_code', 'entry', 'name', 'abundance'
+    # SSU: 'ref_code', 'ncbi_tax_id', 'abundance', 'superkingdom', 'kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species'
+    "urn:embrc.eu:emobon:ssu",              # SSU tables
 ]
 
 
@@ -40,41 +50,6 @@ class LocalBroker(Broker):
     def _datasetPath(filename: str):
         base = pathlib.Path(__file__).parent.parent.parent
         return base.joinpath('contracts', filename)
-    
-    def __execute_observatories(self, params: dict):
-        data = pd.read_csv(LocalBroker._datasetPath('Observatory_combined_logsheets_validated.csv'), index_col=[0])
-        if 'observatory_id' in params.keys():
-            obs_id = params['observatory_id']
-            if isinstance(obs_id, str):
-                data = data.loc[data['obs_id'] == obs_id]
-            elif isinstance(obs_id, list):
-                data = data.loc[data['obs_id'].isin(obs_id)]
-
-        if 'country' in params.keys():
-            country = params['country']
-            if isinstance(country, str):
-                data = data.loc[data['country'] == country]
-            elif isinstance(country, list):
-                data = data.loc[data['country'].isin(country)]
-
-        if 'env_package' in params.keys():
-            env_package = params['env_package']
-            if env_package not in ['soft_sediment', 'hard_sediment', 'water_column']:
-                raise Exception(f'invalid env_package "{env_package}"')
-            
-            if isinstance(env_package, str):
-                data = data.loc[data['env_package'] == env_package]
-            elif isinstance(env_package, list):
-                data = data.loc[data['env_package'].isin(env_package)]
-
-        if 'loc_regional_mgrid' in params.keys():
-            loc_regional_mgrid = params['loc_regional_mgrid']
-            if isinstance(loc_regional_mgrid, int):
-                data = data.loc[data['loc_regional_mgrid'] == loc_regional_mgrid]
-            elif isinstance(loc_regional_mgrid, list):
-                data = data.loc[data['loc_regional_mgrid'].isin(loc_regional_mgrid)]
-
-        return data
     
     def __execute_logsheets(self, params: dict):
         data = pd.read_csv(LocalBroker._datasetPath('b12_combined_logsheets_validated.csv'), index_col=[0])
@@ -127,16 +102,175 @@ class LocalBroker(Broker):
                 data = data.loc[data['tidal_stage'].isin(tidal_stage)]
 
         return data
+    
+    def __execute_observatories(self, params: dict):
+        data = pd.read_csv(LocalBroker._datasetPath('Observatory_combined_logsheets_validated.csv'), index_col=[0])
+        data = self.__filter_data(data, params, 'observatory_id')
+        data = self.__filter_data(data, params, 'country')
+        data = self.__filter_data(
+            data,
+            params,
+            'env_package',
+            valid_values=['soft_sediment', 'hard_sediment', 'water_column'],
+            )
+        # TODO: filter integers too
+        # data = self.__filter_data(data, params, 'loc_regional_mgrid')
+
+        if 'loc_regional_mgrid' in params.keys():
+            loc_regional_mgrid = params['loc_regional_mgrid']
+            if isinstance(loc_regional_mgrid, int):
+                data = data.loc[data['loc_regional_mgrid'] == loc_regional_mgrid]
+            elif isinstance(loc_regional_mgrid, list):
+                data = data.loc[data['loc_regional_mgrid'].isin(loc_regional_mgrid)]
+
+        return data
+    
+    def __execute_go(self, params: dict):
+        data = pd.read_parquet(LocalBroker._datasetPath('metagoflow_analyses.go.parquet'))
+        data = self.__filter_data(data, params, 'ref_code')
+        data = self.__filter_data(data, params, 'id')
+        data = self.__filter_data(data, params, 'name')
+        data = self.__filter_data(data, params, 'aspect')
+        data = self.__filter_abundance(data, params)
+        return data
+
+    def __execute_go_slim(self, params: dict):
+        data = pd.read_parquet(LocalBroker._datasetPath('metagoflow_analyses.go_slim.parquet'))
+        data = self.__filter_data(data, params, 'ref_code')
+        data = self.__filter_data(data, params, 'id')
+        data = self.__filter_data(data, params, 'name')
+        data = self.__filter_data(data, params, 'aspect')
+        data = self.__filter_abundance(data, params)
+        return data
+    
+    def __execute_ips(self, params: dict):
+        data = pd.read_parquet(LocalBroker._datasetPath('metagoflow_analyses.ips.parquet'))
+        data = self.__filter_data(data, params, 'ref_code')
+        data = self.__filter_data(data, params, 'accession')
+        data = self.__filter_data(data, params, 'description')
+        data = self.__filter_abundance(data, params)
+        return data
+
+    def __execute_ko(self, params: dict):
+        data = pd.read_parquet(LocalBroker._datasetPath('metagoflow_analyses.ko.parquet'))
+        data = self.__filter_data(data, params, 'ref_code')
+        data = self.__filter_data(data, params, 'entry')
+        data = self.__filter_data(data, params, 'name')
+        data = self.__filter_abundance(data, params)
+        return data
+    
+    def __execute_lsu(self, params: dict):
+        data = pd.read_parquet(LocalBroker._datasetPath('metagoflow_analyses.lsu.parquet'))
+        data = self.__filter_data(data, params, 'ref_code')
+        # no this is int
+        # data = self.__filter_data(data, params, 'ncbi_tax_id')
+        if 'ncbi_tax_id' in params.keys():
+            ncbi_tax_id = params['ncbi_tax_id']
+            if isinstance(ncbi_tax_id, int):
+                data = data.loc[data['ncbi_tax_id'] == ncbi_tax_id]
+            elif isinstance(ncbi_tax_id, list):
+                data = data.loc[data['ncbi_tax_id'].isin(ncbi_tax_id)]
+
+        # abundance TODO: this has to be fixed in the parquet file, where there are floats.
+        data = self.__filter_abundance(data, params, 'abundance')
+        data = self.__filter_data(data, params, 'superkingdom')
+        data = self.__filter_data(data, params, 'kingdom')
+        data = self.__filter_data(data, params, 'phylum')
+        data = self.__filter_data(data, params, 'class')
+        data = self.__filter_data(data, params, 'order')
+        data = self.__filter_data(data, params, 'family')
+        data = self.__filter_data(data, params, 'genus')
+        data = self.__filter_data(data, params, 'species')
+        return data
+    
+    def __execute_pfam(self, params: dict):
+        data = pd.read_parquet(LocalBroker._datasetPath('metagoflow_analyses.pfam.parquet'))
+        data = self.__filter_data(data, params, 'ref_code')
+        data = self.__filter_data(data, params, 'entry')
+        data = self.__filter_data(data, params, 'name')
+        data = self.__filter_abundance(data, params)
+        return data
+    
+    def __execute_ssu(self, params: dict):
+        data = pd.read_parquet(LocalBroker._datasetPath('metagoflow_analyses.ssu.parquet'))
+        data = self.__filter_data(data, params, 'ref_code')
+        # no this is int
+        # data = self.__filter_data(data, params, 'ncbi_tax_id')
+        if 'ncbi_tax_id' in params.keys():
+            ncbi_tax_id = params['ncbi_tax_id']
+            if isinstance(ncbi_tax_id, int):
+                data = data.loc[data['ncbi_tax_id'] == ncbi_tax_id]
+            elif isinstance(ncbi_tax_id, list):
+                data = data.loc[data['ncbi_tax_id'].isin(ncbi_tax_id)]
+
+        # abundance TODO: this has to be fixed in the parquet file, where there are floats.
+        data = self.__filter_abundance(data, params, 'abundance')
+        data = self.__filter_data(data, params, 'superkingdom')
+        data = self.__filter_data(data, params, 'kingdom')
+        data = self.__filter_data(data, params, 'phylum')
+        data = self.__filter_data(data, params, 'class')
+        data = self.__filter_data(data, params, 'order')
+        data = self.__filter_data(data, params, 'family')
+        data = self.__filter_data(data, params, 'genus')
+        data = self.__filter_data(data, params, 'species')
+        return data
+
 
     def execute(self, name: QueryName, params: dict | None = None) -> Result:
         query = LocalBroker._queries[name]
         queryParams = params or {}
-        if name == "urn:embrc.eu:emobon:observatories":
-            return Result(query, self.__execute_observatories(queryParams))
+        if name == "urn:embrc.eu:emobon:all_by_ref_code":
+            raise Exception(f'query "{name}" not implemented')
+        elif name == "urn:embrc.eu:emobon:go":
+            return Result(query, self.__execute_go(queryParams))
+        elif name == "urn:embrc.eu:emobon:go_slim":
+            return Result(query, self.__execute_go_slim(queryParams))
+        elif name == "urn:embrc.eu:emobon:ips":
+            return Result(query, self.__execute_ips(queryParams))
+        elif name == "urn:embrc.eu:emobon:ko":
+            return Result(query, self.__execute_ko(queryParams))
         elif name == "urn:embrc.eu:emobon:logsheets":
             return Result(query, self.__execute_logsheets(queryParams))
+        elif name == "urn:embrc.eu:emobon:lsu":
+            return Result(query, self.__execute_lsu(queryParams))
+        elif name == "urn:embrc.eu:emobon:observatories":
+            return Result(query, self.__execute_observatories(queryParams))
+        elif name == "urn:embrc.eu:emobon:pfam":
+            return Result(query, self.__execute_pfam(queryParams))
+        elif name == "urn:embrc.eu:emobon:ssu":
+            return Result(query, self.__execute_ssu(queryParams))
         else:
             if name in QUERY_NAMES:
                 raise Exception(f'unsupported query name "{name}"')
             else:
                 raise Exception(f'unknown query name "{name}"')
+            
+
+    ## Filtering utils ##
+    def __filter_data(self, data, params, column_name, valid_values=None):
+        if column_name in params.keys():
+            value = params[column_name]
+            if valid_values and value not in valid_values:
+                raise Exception(f'invalid {column_name} "{value}"')
+            
+            if isinstance(value, str):
+                data = data.loc[data[column_name] == value]
+            elif isinstance(value, list):
+                data = data.loc[data[column_name].isin(value)]
+        return data
+
+    def __filter_abundance(self, data, params):
+        if 'abundance' in params.keys():
+            abundance = params['abundance']
+            if len(abundance) != 2:
+                raise Exception(f'abundance should be a tuple of length 2')
+            
+            if isinstance(abundance[0], int) and isinstance(abundance[1], int):
+                data = data.loc[(data['abundance'] >= abundance[0]) & (data['abundance'] <= abundance[1])]
+            elif isinstance(abundance[0], int) and abundance[1] is None:
+                data = data.loc[data['abundance'] >= abundance[0]]
+            elif abundance[0] is None and isinstance(abundance[1], int):
+                data = data.loc[data['abundance'] <= abundance[1]]
+            else:
+                raise Exception(f'abundance should be a tuple with at least one integer.')
+        return data
