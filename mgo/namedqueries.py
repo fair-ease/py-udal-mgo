@@ -9,12 +9,14 @@ QueryName = Literal[
     "urn:embrc.eu:emobon:all_by_ref_code",  # this should use ref codes from logsheets and query all the tables at once
     "urn:embrc.eu:emobon:go",               # columns 'ref_code', 'id', 'name', 'aspect', 'abundance'
     "urn:embrc.eu:emobon:go_slim",          # columns 'ref_code', 'id', 'name', 'aspect', 'abundance'
-    "urn:embrc.eu:emobon:ips",
-    "urn:embrc.eu:emobon:ko",
+    "urn:embrc.eu:emobon:ips",              # 'ref_code', 'accession', 'description', 'abundance'
+    "urn:embrc.eu:emobon:ko",               # 'ref_code', 'entry', 'name', 'abundance'
     "urn:embrc.eu:emobon:logsheets",
-    "urn:embrc.eu:emobon:lsu",
+    # LSU: 'ref_code', 'ncbi_tax_id', 'abundance', 'superkingdom', 'kingdom','phylum', 'class', 'order', 'family', 'genus', 'species'
+    "urn:embrc.eu:emobon:lsu",              
     "urn:embrc.eu:emobon:observatories",
-    "urn:embrc.eu:emobon:pfam",
+    "urn:embrc.eu:emobon:pfam",             # 'ref_code', 'entry', 'name', 'abundance'
+    # SSU: 'ref_code', 'ncbi_tax_id', 'abundance', 'superkingdom', 'kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species'
     "urn:embrc.eu:emobon:ssu",              # SSU tables
 
 ]
@@ -27,6 +29,58 @@ QUERY_NAMES: typing.Tuple[QueryName, ...] = typing.get_args(QueryName)
 
 # Ordered alphabetically
 QUERY_REGISTRY: dict[QueryName, NamedQueryInfo] = {
+    "urn:embrc.eu:emobon:all_by_ref_code": NamedQueryInfo(
+        "urn:embrc.eu:emobon:all_by_ref_code",
+        {
+            'ref_code': ['str', udal.tlist('str')],
+        },
+    ),
+    "urn:embrc.eu:emobon:go": NamedQueryInfo(
+        "urn:embrc.eu:emobon:go",
+        {
+            'ref_code': ['str', udal.tlist('str')],
+            'id': ['str', udal.tlist('str')],
+            'name': ['str', udal.tlist('str')],
+            'aspect': [
+                udal.tliteral('biological_process'),
+                udal.tliteral('cellular_component'),
+                udal.tliteral('molecular_function'),
+            ],
+            'abundance': ['int', tuple(udal.tliteral('int'), udal.tliteral('int'))],
+        },
+    ),
+    "urn:embrc.eu:emobon:go_slim": NamedQueryInfo(
+        "urn:embrc.eu:emobon:go_slim",
+        {
+            'ref_code': ['str', udal.tlist('str')],
+            'id': ['str', udal.tlist('str')],
+            'name': ['str', udal.tlist('str')],
+            'aspect': [
+                udal.tliteral('biological_process'),
+                udal.tliteral('cellular_component'),
+                udal.tliteral('molecular_function'),
+            ],
+            'abundance': ['int', tuple(udal.tliteral('int'), udal.tliteral('int'))],
+        },
+    ),
+    "urn:embrc.eu:emobon:ips": NamedQueryInfo(
+        "urn:embrc.eu:emobon:ips",
+        {
+            'ref_code': ['str', udal.tlist('str')],
+            'accession': ['str', udal.tlist('str')],
+            'description': ['str', udal.tlist('str')],
+            'abundance': ['int', tuple(udal.tliteral('int'), udal.tliteral('int'))],
+        },
+    ),
+    "urn:embrc.eu:emobon:ko": NamedQueryInfo(
+        "urn:embrc.eu:emobon:ko",
+        {
+            'ref_code': ['str', udal.tlist('str')],
+            'entry': ['str', udal.tlist('str')],
+            'name': ['str', udal.tlist('str')],
+            'abundance': ['int', tuple(udal.tliteral('int'), udal.tliteral('int'))],
+        },
+    ),
     "urn:embrc.eu:emobon:logsheets": NamedQueryInfo(
         "urn:embrc.eu:emobon:logsheets",
         {
@@ -111,6 +165,22 @@ QUERY_REGISTRY: dict[QueryName, NamedQueryInfo] = {
                             udal.tliteral('water_column')],
         },
     ),
+    "urn:embrc.eu:emobon:lsu": NamedQueryInfo(
+        "urn:embrc.eu:emobon:lsu",
+        {
+            'ref_code': ['str', udal.tlist('str')],
+            'ncbi_tax_id': ['int', udal.tlist('int')],
+            'abundance': ['int', tuple(udal.tliteral('int'), udal.tliteral('int'))],
+            'superkingdom': ['str', udal.tlist('str')],
+            'kingdom': ['str', udal.tlist('str')],
+            'phylum': ['str', udal.tlist('str')],
+            'class': ['str', udal.tlist('str')],
+            'order': ['str', udal.tlist('str')],
+            'family': ['str', udal.tlist('str')],
+            'genus': ['str', udal.tlist('str')],
+            'species': ['str', udal.tlist('str')],
+        },
+    ),
     "urn:embrc.eu:emobon:observatories": NamedQueryInfo(
         "urn:embrc.eu:emobon:observatories",
         {
@@ -120,6 +190,31 @@ QUERY_REGISTRY: dict[QueryName, NamedQueryInfo] = {
                             udal.tliteral('hard_sediment'),
                             udal.tliteral('water_column')],
             'loc_regional_mgrid': ['int', udal.tlist('int')],
+        },
+    ),
+    "urn:embrc.eu:emobon:pfam": NamedQueryInfo(
+        "urn:embrc.eu:emobon:pfam",
+        {
+            'ref_code': ['str', udal.tlist('str')],
+            'entry': ['str', udal.tlist('str')],
+            'name': ['str', udal.tlist('str')],
+            'abundance': ['int', tuple(udal.tliteral('int'), udal.tliteral('int'))],
+        },
+    ),
+    "urn:embrc.eu:emobon:ssu": NamedQueryInfo(
+        "urn:embrc.eu:emobon:ssu",
+        {
+            'ref_code': ['str', udal.tlist('str')],
+            'ncbi_tax_id': ['int', udal.tlist('int')],
+            'abundance': ['int', tuple(udal.tliteral('int'), udal.tliteral('int'))],
+            'superkingdom': ['str', udal.tlist('str')],
+            'kingdom': ['str', udal.tlist('str')],
+            'phylum': ['str', udal.tlist('str')],
+            'class': ['str', udal.tlist('str')],
+            'order': ['str', udal.tlist('str')],
+            'family': ['str', udal.tlist('str')],
+            'genus': ['str', udal.tlist('str')],
+            'species': ['str', udal.tlist('str')],
         },
     ),
 }

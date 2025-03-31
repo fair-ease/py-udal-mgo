@@ -28,7 +28,6 @@ localBrokerQueries: dict[QueryName, NamedQueryInfo] = \
     { k: v for k, v in QUERY_REGISTRY.items() if k in localBrokerQueryNames }
 
 
-
 class LocalBroker(Broker):
 
     _query_names: List[QueryName] = localBrokerQueryNames
@@ -51,6 +50,60 @@ class LocalBroker(Broker):
         base = pathlib.Path(__file__).parent.parent.parent
         return base.joinpath('contracts', filename)
     
+    def __execute_all_by_ref_code(self, params: dict) -> dict:
+        "This is the only query which return dictionary of DFs"
+        paths = [
+            ('metagoflow_analyses.go.parquet', 'go'),
+            ('metagoflow_analyses.go_slim.parquet', 'go_slim'),
+            ('metagoflow_analyses.ips.parquet', 'ips'),
+            ('metagoflow_analyses.ko.parquet', 'ko'),
+            ('metagoflow_analyses.lsu.parquet', 'lsu'),
+            ('metagoflow_analyses.pfam.parquet', 'pfam'),
+            ('metagoflow_analyses.ssu.parquet', 'ssu'),
+            ('b12_combined_logsheets_validated.csv', 'logsheets'),
+            ]
+
+        data = {}
+        for path, name in paths:
+            df = pd.read_parquet(LocalBroker._datasetPath(path))
+            df = self.__filter_data(df, params, 'ref_code')
+            data[name] = df
+        return data
+    
+    def __execute_go(self, params: dict):
+        data = pd.read_parquet(LocalBroker._datasetPath('metagoflow_analyses.go.parquet'))
+        data = self.__filter_data(data, params, 'ref_code')
+        data = self.__filter_data(data, params, 'id')
+        data = self.__filter_data(data, params, 'name')
+        data = self.__filter_data(data, params, 'aspect')
+        data = self.__filter_abundance(data, params)
+        return data
+
+    def __execute_go_slim(self, params: dict):
+        data = pd.read_parquet(LocalBroker._datasetPath('metagoflow_analyses.go_slim.parquet'))
+        data = self.__filter_data(data, params, 'ref_code')
+        data = self.__filter_data(data, params, 'id')
+        data = self.__filter_data(data, params, 'name')
+        data = self.__filter_data(data, params, 'aspect')
+        data = self.__filter_abundance(data, params)
+        return data
+    
+    def __execute_ips(self, params: dict):
+        data = pd.read_parquet(LocalBroker._datasetPath('metagoflow_analyses.ips.parquet'))
+        data = self.__filter_data(data, params, 'ref_code')
+        data = self.__filter_data(data, params, 'accession')
+        data = self.__filter_data(data, params, 'description')
+        data = self.__filter_abundance(data, params)
+        return data
+
+    def __execute_ko(self, params: dict):
+        data = pd.read_parquet(LocalBroker._datasetPath('metagoflow_analyses.ko.parquet'))
+        data = self.__filter_data(data, params, 'ref_code')
+        data = self.__filter_data(data, params, 'entry')
+        data = self.__filter_data(data, params, 'name')
+        data = self.__filter_abundance(data, params)
+        return data
+
     def __execute_logsheets(self, params: dict):
         data = pd.read_csv(LocalBroker._datasetPath('b12_combined_logsheets_validated.csv'), index_col=[0])
         if 'source_mat_id' in params.keys():
@@ -102,63 +155,7 @@ class LocalBroker(Broker):
                 data = data.loc[data['tidal_stage'].isin(tidal_stage)]
 
         return data
-    
-    def __execute_observatories(self, params: dict):
-        data = pd.read_csv(LocalBroker._datasetPath('Observatory_combined_logsheets_validated.csv'), index_col=[0])
-        data = self.__filter_data(data, params, 'observatory_id')
-        data = self.__filter_data(data, params, 'country')
-        data = self.__filter_data(
-            data,
-            params,
-            'env_package',
-            valid_values=['soft_sediment', 'hard_sediment', 'water_column'],
-            )
-        # TODO: filter integers too
-        # data = self.__filter_data(data, params, 'loc_regional_mgrid')
 
-        if 'loc_regional_mgrid' in params.keys():
-            loc_regional_mgrid = params['loc_regional_mgrid']
-            if isinstance(loc_regional_mgrid, int):
-                data = data.loc[data['loc_regional_mgrid'] == loc_regional_mgrid]
-            elif isinstance(loc_regional_mgrid, list):
-                data = data.loc[data['loc_regional_mgrid'].isin(loc_regional_mgrid)]
-
-        return data
-    
-    def __execute_go(self, params: dict):
-        data = pd.read_parquet(LocalBroker._datasetPath('metagoflow_analyses.go.parquet'))
-        data = self.__filter_data(data, params, 'ref_code')
-        data = self.__filter_data(data, params, 'id')
-        data = self.__filter_data(data, params, 'name')
-        data = self.__filter_data(data, params, 'aspect')
-        data = self.__filter_abundance(data, params)
-        return data
-
-    def __execute_go_slim(self, params: dict):
-        data = pd.read_parquet(LocalBroker._datasetPath('metagoflow_analyses.go_slim.parquet'))
-        data = self.__filter_data(data, params, 'ref_code')
-        data = self.__filter_data(data, params, 'id')
-        data = self.__filter_data(data, params, 'name')
-        data = self.__filter_data(data, params, 'aspect')
-        data = self.__filter_abundance(data, params)
-        return data
-    
-    def __execute_ips(self, params: dict):
-        data = pd.read_parquet(LocalBroker._datasetPath('metagoflow_analyses.ips.parquet'))
-        data = self.__filter_data(data, params, 'ref_code')
-        data = self.__filter_data(data, params, 'accession')
-        data = self.__filter_data(data, params, 'description')
-        data = self.__filter_abundance(data, params)
-        return data
-
-    def __execute_ko(self, params: dict):
-        data = pd.read_parquet(LocalBroker._datasetPath('metagoflow_analyses.ko.parquet'))
-        data = self.__filter_data(data, params, 'ref_code')
-        data = self.__filter_data(data, params, 'entry')
-        data = self.__filter_data(data, params, 'name')
-        data = self.__filter_abundance(data, params)
-        return data
-    
     def __execute_lsu(self, params: dict):
         data = pd.read_parquet(LocalBroker._datasetPath('metagoflow_analyses.lsu.parquet'))
         data = self.__filter_data(data, params, 'ref_code')
@@ -181,6 +178,28 @@ class LocalBroker(Broker):
         data = self.__filter_data(data, params, 'family')
         data = self.__filter_data(data, params, 'genus')
         data = self.__filter_data(data, params, 'species')
+        return data
+    
+    def __execute_observatories(self, params: dict):
+        data = pd.read_csv(LocalBroker._datasetPath('Observatory_combined_logsheets_validated.csv'), index_col=[0])
+        data = self.__filter_data(data, params, 'observatory_id')
+        data = self.__filter_data(data, params, 'country')
+        data = self.__filter_data(
+            data,
+            params,
+            'env_package',
+            valid_values=['soft_sediment', 'hard_sediment', 'water_column'],
+            )
+        # TODO: filter integers too
+        # data = self.__filter_data(data, params, 'loc_regional_mgrid')
+
+        if 'loc_regional_mgrid' in params.keys():
+            loc_regional_mgrid = params['loc_regional_mgrid']
+            if isinstance(loc_regional_mgrid, int):
+                data = data.loc[data['loc_regional_mgrid'] == loc_regional_mgrid]
+            elif isinstance(loc_regional_mgrid, list):
+                data = data.loc[data['loc_regional_mgrid'].isin(loc_regional_mgrid)]
+
         return data
     
     def __execute_pfam(self, params: dict):
@@ -220,7 +239,7 @@ class LocalBroker(Broker):
         query = LocalBroker._queries[name]
         queryParams = params or {}
         if name == "urn:embrc.eu:emobon:all_by_ref_code":
-            raise Exception(f'query "{name}" not implemented')
+            return Result(query, self.__execute_all_by_ref_code(queryParams))
         elif name == "urn:embrc.eu:emobon:go":
             return Result(query, self.__execute_go(queryParams))
         elif name == "urn:embrc.eu:emobon:go_slim":
