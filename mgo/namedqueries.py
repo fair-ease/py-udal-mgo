@@ -46,6 +46,9 @@ QUERY_REGISTRY: dict[QueryName, NamedQueryInfo] = {
                 udal.tliteral('cellular_component'),
                 udal.tliteral('molecular_function'),
             ],
+            # I am trying to resolve the tuple ParamType on the udal specs level https://github.com/fair-ease/py-udal-interface/pull/1
+            # this should be refactored after.
+            # TODO: this below probably does not pass (None, int) as a valid type (NEEDS tests)
             'abundance': ['int', tuple(udal.tliteral('int'), udal.tliteral('int'))],
         },
     ),
