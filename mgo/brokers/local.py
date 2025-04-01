@@ -185,7 +185,7 @@ class LocalBroker(Broker):
     
     def __execute_observatories(self, params: dict):
         data = pd.read_csv(LocalBroker._datasetPath('Observatory_combined_logsheets_validated.csv'), index_col=[0])
-        data = self.__filter_data(data, params, 'observatory_id')
+        data = self.__filter_data(data, params, 'obs_id')
         data = self.__filter_data(data, params, 'country')
         data = self.__filter_data(
             data,

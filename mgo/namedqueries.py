@@ -189,7 +189,7 @@ QUERY_REGISTRY: dict[QueryName, NamedQueryInfo] = {
     "urn:embrc.eu:emobon:observatories": NamedQueryInfo(
         "urn:embrc.eu:emobon:observatories",
         {
-            'observatory_id': ['str', udal.tlist('str')],
+            'obs_id': ['str', udal.tlist('str')],
             'country': ['str', udal.tlist('str')],
             'env_package': [udal.tliteral('soft_sediment'),
                             udal.tliteral('hard_sediment'),
