@@ -57,15 +57,18 @@ class LocalBroker(Broker):
             ('metagoflow_analyses.go_slim.parquet', 'go_slim'),
             ('metagoflow_analyses.ips.parquet', 'ips'),
             ('metagoflow_analyses.ko.parquet', 'ko'),
-            ('metagoflow_analyses.lsu.parquet', 'lsu'),
+            ('metagoflow_analyses.LSU.parquet', 'lsu'),
             ('metagoflow_analyses.pfam.parquet', 'pfam'),
-            ('metagoflow_analyses.ssu.parquet', 'ssu'),
+            ('metagoflow_analyses.SSU.parquet', 'ssu'),
             ('b12_combined_logsheets_validated.csv', 'logsheets'),
             ]
 
         data = {}
         for path, name in paths:
-            df = pd.read_parquet(LocalBroker._datasetPath(path))
+            try:
+                df = pd.read_parquet(LocalBroker._datasetPath(path))
+            except:
+                pd.read_csv(LocalBroker._datasetPath('b12_combined_logsheets_validated.csv'), index_col=[0])
             df = self.__filter_data(df, params, 'ref_code')
             data[name] = df
         return data
@@ -157,7 +160,7 @@ class LocalBroker(Broker):
         return data
 
     def __execute_lsu(self, params: dict):
-        data = pd.read_parquet(LocalBroker._datasetPath('metagoflow_analyses.lsu.parquet'))
+        data = pd.read_parquet(LocalBroker._datasetPath('metagoflow_analyses.LSU.parquet'))
         data = self.__filter_data(data, params, 'ref_code')
         # no this is int
         # data = self.__filter_data(data, params, 'ncbi_tax_id')
@@ -169,7 +172,7 @@ class LocalBroker(Broker):
                 data = data.loc[data['ncbi_tax_id'].isin(ncbi_tax_id)]
 
         # abundance TODO: this has to be fixed in the parquet file, where there are floats.
-        data = self.__filter_abundance(data, params, 'abundance')
+        data = self.__filter_abundance(data, params)
         data = self.__filter_data(data, params, 'superkingdom')
         data = self.__filter_data(data, params, 'kingdom')
         data = self.__filter_data(data, params, 'phylum')
@@ -211,7 +214,7 @@ class LocalBroker(Broker):
         return data
     
     def __execute_ssu(self, params: dict):
-        data = pd.read_parquet(LocalBroker._datasetPath('metagoflow_analyses.ssu.parquet'))
+        data = pd.read_parquet(LocalBroker._datasetPath('metagoflow_analyses.SSU.parquet'))
         data = self.__filter_data(data, params, 'ref_code')
         # no this is int
         # data = self.__filter_data(data, params, 'ncbi_tax_id')
@@ -223,7 +226,7 @@ class LocalBroker(Broker):
                 data = data.loc[data['ncbi_tax_id'].isin(ncbi_tax_id)]
 
         # abundance TODO: this has to be fixed in the parquet file, where there are floats.
-        data = self.__filter_abundance(data, params, 'abundance')
+        data = self.__filter_abundance(data, params)
         data = self.__filter_data(data, params, 'superkingdom')
         data = self.__filter_data(data, params, 'kingdom')
         data = self.__filter_data(data, params, 'phylum')
@@ -277,19 +280,29 @@ class LocalBroker(Broker):
             elif isinstance(value, list):
                 data = data.loc[data[column_name].isin(value)]
         return data
-
+    
     def __filter_abundance(self, data, params):
-        if 'abundance' in params.keys():
-            abundance = params['abundance']
-            if len(abundance) != 2:
-                raise Exception(f'abundance should be a tuple of length 2')
-            
-            if isinstance(abundance[0], int) and isinstance(abundance[1], int):
-                data = data.loc[(data['abundance'] >= abundance[0]) & (data['abundance'] <= abundance[1])]
-            elif isinstance(abundance[0], int) and abundance[1] is None:
-                data = data.loc[data['abundance'] >= abundance[0]]
-            elif abundance[0] is None and isinstance(abundance[1], int):
-                data = data.loc[data['abundance'] <= abundance[1]]
-            else:
-                raise Exception(f'abundance should be a tuple with at least one integer.')
+        # create a 2-list with abundance_lower and abundance_upper
+        # if both are None, then raise error
+        abundance = []
+        if 'abundance_lower' in params.keys():
+            abundance.append(params['abundance_lower'])
+        else:
+            abundance.append(None)
+        if 'abundance_upper' in params.keys():
+            abundance.append(params['abundance_upper'])
+        else:
+            abundance.append(None)
+        
+        if abundance[0] is None and abundance[1] is None:
+            return data
+
+        if isinstance(abundance[0], int) and isinstance(abundance[1], int):
+            data = data.loc[(data['abundance'] >= abundance[0]) & (data['abundance'] <= abundance[1])]
+        elif isinstance(abundance[0], int) and abundance[1] is None:
+            data = data.loc[data['abundance'] >= abundance[0]]
+        elif abundance[0] is None and isinstance(abundance[1], int):
+            data = data.loc[data['abundance'] <= abundance[1]]
+        else:
+            raise Exception(f'abundance should be a list with at least one integer.')
         return data

@@ -46,10 +46,8 @@ QUERY_REGISTRY: dict[QueryName, NamedQueryInfo] = {
                 udal.tliteral('cellular_component'),
                 udal.tliteral('molecular_function'),
             ],
-            # I am trying to resolve the tuple ParamType on the udal specs level https://github.com/fair-ease/py-udal-interface/pull/1
-            # this should be refactored after.
-            # TODO: this below probably does not pass (None, int) as a valid type (NEEDS tests)
-            'abundance': ['int', tuple(udal.tliteral('int'), udal.tliteral('int'))],
+            'abundance_lower': ['int', udal.tliteral('int')],
+            'abundance_upper': ['int', udal.tliteral('int')],
         },
     ),
     "urn:embrc.eu:emobon:go_slim": NamedQueryInfo(
@@ -63,7 +61,8 @@ QUERY_REGISTRY: dict[QueryName, NamedQueryInfo] = {
                 udal.tliteral('cellular_component'),
                 udal.tliteral('molecular_function'),
             ],
-            'abundance': ['int', tuple(udal.tliteral('int'), udal.tliteral('int'))],
+            'abundance_lower': ['int', udal.tliteral('int')],
+            'abundance_upper': ['int', udal.tliteral('int')],
         },
     ),
     "urn:embrc.eu:emobon:ips": NamedQueryInfo(
@@ -72,7 +71,8 @@ QUERY_REGISTRY: dict[QueryName, NamedQueryInfo] = {
             'ref_code': ['str', udal.tlist('str')],
             'accession': ['str', udal.tlist('str')],
             'description': ['str', udal.tlist('str')],
-            'abundance': ['int', tuple(udal.tliteral('int'), udal.tliteral('int'))],
+            'abundance_lower': ['int', udal.tliteral('int')],
+            'abundance_upper': ['int', udal.tliteral('int')],
         },
     ),
     "urn:embrc.eu:emobon:ko": NamedQueryInfo(
@@ -81,7 +81,8 @@ QUERY_REGISTRY: dict[QueryName, NamedQueryInfo] = {
             'ref_code': ['str', udal.tlist('str')],
             'entry': ['str', udal.tlist('str')],
             'name': ['str', udal.tlist('str')],
-            'abundance': ['int', tuple(udal.tliteral('int'), udal.tliteral('int'))],
+            'abundance_lower': ['int', udal.tliteral('int')],
+            'abundance_upper': ['int', udal.tliteral('int')],
         },
     ),
     "urn:embrc.eu:emobon:logsheets": NamedQueryInfo(
@@ -173,7 +174,8 @@ QUERY_REGISTRY: dict[QueryName, NamedQueryInfo] = {
         {
             'ref_code': ['str', udal.tlist('str')],
             'ncbi_tax_id': ['int', udal.tlist('int')],
-            'abundance': ['int', tuple(udal.tliteral('int'), udal.tliteral('int'))],
+            'abundance_lower': ['int', udal.tliteral('int')],
+            'abundance_upper': ['int', udal.tliteral('int')],
             'superkingdom': ['str', udal.tlist('str')],
             'kingdom': ['str', udal.tlist('str')],
             'phylum': ['str', udal.tlist('str')],
@@ -201,7 +203,8 @@ QUERY_REGISTRY: dict[QueryName, NamedQueryInfo] = {
             'ref_code': ['str', udal.tlist('str')],
             'entry': ['str', udal.tlist('str')],
             'name': ['str', udal.tlist('str')],
-            'abundance': ['int', tuple(udal.tliteral('int'), udal.tliteral('int'))],
+            'abundance_lower': ['int', udal.tliteral('int')],
+            'abundance_upper': ['int', udal.tliteral('int')],
         },
     ),
     "urn:embrc.eu:emobon:ssu": NamedQueryInfo(
@@ -209,7 +212,8 @@ QUERY_REGISTRY: dict[QueryName, NamedQueryInfo] = {
         {
             'ref_code': ['str', udal.tlist('str')],
             'ncbi_tax_id': ['int', udal.tlist('int')],
-            'abundance': ['int', tuple(udal.tliteral('int'), udal.tliteral('int'))],
+            'abundance_lower': ['int', udal.tliteral('int')],
+            'abundance_upper': ['int', udal.tliteral('int')],
             'superkingdom': ['str', udal.tlist('str')],
             'kingdom': ['str', udal.tlist('str')],
             'phylum': ['str', udal.tlist('str')],
