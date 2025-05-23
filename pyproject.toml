@@ -5,7 +5,7 @@ description = "Marine Genomics Observatories UDAL implementation"
 authors = []
 license = "MIT"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 
 
 [build-system]
