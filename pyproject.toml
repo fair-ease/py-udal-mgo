@@ -15,6 +15,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry]
 packages = [
     {include = "mgo"},
+    {include = "contracts"},
 ]
 
 [tool.poetry.dependencies]
