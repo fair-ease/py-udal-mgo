@@ -60,7 +60,7 @@ class LocalBroker(Broker):
             ('metagoflow_analyses.LSU.parquet', 'lsu'),
             ('metagoflow_analyses.pfam.parquet', 'pfam'),
             ('metagoflow_analyses.SSU.parquet', 'ssu'),
-            ('b12_combined_logsheets_validated.csv', 'logsheets'),
+            ('Batch1and2_combined_logsheets_2024-11-12.csv', 'logsheets'),
             ]
 
         data = {}
@@ -68,7 +68,7 @@ class LocalBroker(Broker):
             try:
                 df = pd.read_parquet(LocalBroker._datasetPath(path))
             except:
-                pd.read_csv(LocalBroker._datasetPath('b12_combined_logsheets_validated.csv'), index_col=[0])
+                pd.read_csv(LocalBroker._datasetPath('Batch1and2_combined_logsheets_2024-11-12.csv'), index_col=[0])
             df = self.__filter_data(df, params, 'ref_code')
             data[name] = df
         return data
@@ -108,7 +108,7 @@ class LocalBroker(Broker):
         return data
 
     def __execute_logsheets(self, params: dict):
-        data = pd.read_csv(LocalBroker._datasetPath('b12_combined_logsheets_validated.csv'), index_col=[0])
+        data = pd.read_csv(LocalBroker._datasetPath('Batch1and2_combined_logsheets_2024-11-12.csv'), index_col=[0])
         if 'source_mat_id' in params.keys():
             source_mat_id = params['source_mat_id']
             if isinstance(source_mat_id, str):
